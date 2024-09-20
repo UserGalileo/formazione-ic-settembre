@@ -1,12 +1,14 @@
-import {afterNextRender, Component, ElementRef, inject, Renderer2} from '@angular/core';
-import { ProfilePhotoComponent } from "./components/profile-photo.component";
-import { ThemeableButtonComponent } from "./components/themeable-button.component";
-import {CounterComponent} from "./components/counter.component";
+import {Component, ElementRef, inject, Renderer2} from '@angular/core';
 import {SumComponent} from "./components/sum.component";
-import {SliderComponent} from "./components/slider.component";
-import {BmiComponent} from "./components/bmi.component";
-import {ActiveUserComponent} from "./components/active-user.component";
 import {CardComponent} from "./components/card.component";
+import {HighlightDirective} from "./directives/highlight.directive";
+import {UnlessDirective} from "./directives/unless.directive";
+import {BoldifyDirective, HighlightAndBoldify} from "./directives/boldify.directive";
+import {CurrencyPipe, DatePipe, JsonPipe, LowerCasePipe, UpperCasePipe} from "@angular/common";
+import {ExponentialPipe} from "./pipes/exponential.pipe";
+import {LoggerService} from "./services/logger.service";
+import {HttpClient, HttpEventType} from "@angular/common/http";
+import {User} from "./models/user";
 
 @Component({
   selector: 'app-root',
@@ -62,7 +64,20 @@ import {CardComponent} from "./components/card.component";
 
     <hr>
 
-    <input type="text">
+<!--    <div>-->
+<!--      <input type="radio" name="colors" (click)="color = 'lightgreen'"> Green-->
+<!--      <input type="radio" name="colors" (click)="color = 'yellow'"> Yellow-->
+<!--      <input type="radio" name="colors" (click)="color = 'cyan'"> Cyan-->
+<!--    </div>-->
+
+<!--    <p [appHighlight]="color">Hello World</p>-->
+
+<!--    <div *unless="false">Hello World</div>-->
+
+<!--    <p appHighlightBoldify>Hello!</p>-->
+
+    {{ today | date }}<br>
+    {{ money | currency }}<br>
   `,
   imports: [
     // ActiveUserComponent,
@@ -72,18 +87,38 @@ import {CardComponent} from "./components/card.component";
     SumComponent,
     // SliderComponent,
     // BmiComponent,
-    CardComponent
-  ]
+    CardComponent,
+    HighlightDirective,
+    UnlessDirective,
+    BoldifyDirective,
+    HighlightAndBoldify,
+    DatePipe,
+    UpperCasePipe,
+    LowerCasePipe,
+    CurrencyPipe,
+    JsonPipe,
+    ExponentialPipe
+  ],
 })
 export class AppComponent {
 
   // Dipendenze
   private el = inject(ElementRef);
   private renderer = inject(Renderer2);
+  private logger = inject(LoggerService);
+  private http = inject(HttpClient);
 
   // Stato
   count = 2;
-  isCardVisible = false;
+  isCardVisible = true;
+  color = 'lightgreen';
+
+  today: number = Date.now();
+  money = 30.2;
+  obj = {
+    name: 'Michele',
+    surname: 'Stieven'
+  }
 
   ngAfterViewInit() {
     this.el.nativeElement.querySelector('input')?.focus();
@@ -93,4 +128,9 @@ export class AppComponent {
     this.count = count;
   }
 
+  ngOnInit() {
+
+  }
+
 }
+

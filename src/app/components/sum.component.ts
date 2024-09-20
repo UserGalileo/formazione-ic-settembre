@@ -1,4 +1,6 @@
-import {Component, Input} from "@angular/core";
+import {Component, Inject, inject, Input} from "@angular/core";
+import {LoggerService} from "../services/logger.service";
+import {APP_CONFIG} from "../app.config";
 
 // Stateless
 @Component({
@@ -6,13 +8,19 @@ import {Component, Input} from "@angular/core";
   standalone: true,
   template: `
     {{ a + b }}
+    <h1></h1>
   `,
 })
 export class SumComponent {
 
+  private logger = inject(LoggerService);
+  private config = inject(APP_CONFIG);
+
   @Input({ required: true }) a!: number;
   @Input({ required: true }) b!: number;
+
+  ngOnInit() {
+    this.logger.log(this.config.apiUrl);
+  }
 }
-
-
 
