@@ -1,136 +1,67 @@
-import {Component, ElementRef, inject, Renderer2} from '@angular/core';
-import {SumComponent} from "./components/sum.component";
-import {CardComponent} from "./components/card.component";
-import {HighlightDirective} from "./directives/highlight.directive";
-import {UnlessDirective} from "./directives/unless.directive";
-import {BoldifyDirective, HighlightAndBoldify} from "./directives/boldify.directive";
-import {CurrencyPipe, DatePipe, JsonPipe, LowerCasePipe, UpperCasePipe} from "@angular/common";
-import {ExponentialPipe} from "./pipes/exponential.pipe";
-import {LoggerService} from "./services/logger.service";
-import {HttpClient, HttpEventType} from "@angular/common/http";
+import {Component, inject} from '@angular/core';
+import {HttpClient} from "@angular/common/http";
 import {User} from "./models/user";
+import {Post} from "./models/post";
+import {JsonPipe} from "@angular/common";
 
 @Component({
   selector: 'app-root',
   standalone: true,
   template: `
-<!--    <h1>Hello world!</h1>-->
-<!--    <h3>Prova</h3>-->
-
-<!--    <app-profile-photo></app-profile-photo>-->
-<!--    <app-profile-photo></app-profile-photo>-->
-<!--    <app-profile-photo></app-profile-photo>-->
-
-<!--    <div class="red-theme">-->
-<!--      <themeable-button></themeable-button>-->
-<!--    </div>-->
-
-<!--    <app-counter-->
-<!--      [(count)]="count"-->
-<!--    />-->
-<!--    <app-counter-->
-<!--      [count]="count"-->
-<!--      (countChange)="onCountChange($event)"-->
-<!--    />-->
-<!--    <app-counter-->
-<!--      [count]="count"-->
-<!--      (countChange)="onCountChange($event)"-->
-<!--    />-->
-
-<!--    <app-counter />-->
-
-<!--    <hr>-->
-
-    <app-sum [a]="2" [b]="3" />
-
-<!--    <hr>-->
-
-<!--    <app-slider [(value)]="count" />-->
-<!--    <app-slider [value]="30" />-->
-<!--    <app-slider [value]="40" />-->
-
-<!--    <app-bmi />-->
-
-<!--    <app-active-user />-->
-
-    @if (isCardVisible) {
-      <app-card>
-        <div class="card-title">This is the title.</div>
-        <div class="card-body">This is the body.</div>
-        This is the footer!
-      </app-card>
+    <h3>Users:</h3>
+    @for (user of users; track user.id) {
+      <li
+        [class.active]="user.id === activeUser"
+        (click)="setActive(user.id)"
+      >{{ user.name }}
+      </li>
+    } @empty {
+      No users.
     }
-    <button (click)="isCardVisible = !isCardVisible">toggle card</button>
-
     <hr>
-
-<!--    <div>-->
-<!--      <input type="radio" name="colors" (click)="color = 'lightgreen'"> Green-->
-<!--      <input type="radio" name="colors" (click)="color = 'yellow'"> Yellow-->
-<!--      <input type="radio" name="colors" (click)="color = 'cyan'"> Cyan-->
-<!--    </div>-->
-
-<!--    <p [appHighlight]="color">Hello World</p>-->
-
-<!--    <div *unless="false">Hello World</div>-->
-
-<!--    <p appHighlightBoldify>Hello!</p>-->
-
-    {{ today | date }}<br>
-    {{ money | currency }}<br>
+    <h3>Posts:</h3>
+    @for (post of posts; track post.id) {
+      <li>{{ post.title }}</li>
+    } @empty {
+      Select a user to see their posts.
+    }
   `,
   imports: [
-    // ActiveUserComponent,
-    // ProfilePhotoComponent,
-    // ThemeableButtonComponent,
-    // CounterComponent,
-    SumComponent,
-    // SliderComponent,
-    // BmiComponent,
-    CardComponent,
-    HighlightDirective,
-    UnlessDirective,
-    BoldifyDirective,
-    HighlightAndBoldify,
-    DatePipe,
-    UpperCasePipe,
-    LowerCasePipe,
-    CurrencyPipe,
-    JsonPipe,
-    ExponentialPipe
+    JsonPipe
   ],
+  styles: `
+    .active {
+      font-weight: bold;
+    }
+  `
 })
 export class AppComponent {
 
-  // Dipendenze
-  private el = inject(ElementRef);
-  private renderer = inject(Renderer2);
-  private logger = inject(LoggerService);
   private http = inject(HttpClient);
 
   // Stato
-  count = 2;
-  isCardVisible = true;
-  color = 'lightgreen';
-
-  today: number = Date.now();
-  money = 30.2;
-  obj = {
-    name: 'Michele',
-    surname: 'Stieven'
-  }
-
-  ngAfterViewInit() {
-    this.el.nativeElement.querySelector('input')?.focus();
-  }
-
-  onCountChange(count: number) {
-    this.count = count;
-  }
+  users: User[] = [];
+  activeUser: User['id'] | null = null;
+  // Stato derivato ASINCRONO
+  posts: Post[] = [];
 
   ngOnInit() {
-
+    this.http.get<User[]>(
+      'https://jsonplaceholder.typicode.com/users'
+    ).subscribe(users => {
+      this.users = users;
+    })
   }
 
+  setActive(id: User['id']) {
+    this.activeUser = id;
+
+    this.http.get<Post[]>(
+      'https://jsonplaceholder.typicode.com/posts',
+      { params: { userId: id } }
+    ).subscribe(posts => {
+      this.posts = posts;
+    })
+  }
 }
 
