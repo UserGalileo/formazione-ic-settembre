@@ -1,4 +1,4 @@
-import {Component, Inject, inject, Input} from "@angular/core";
+import {ChangeDetectionStrategy, Component, Inject, inject, Input} from "@angular/core";
 import {LoggerService} from "../services/logger.service";
 import {APP_CONFIG} from "../app.config";
 
@@ -10,6 +10,7 @@ import {APP_CONFIG} from "../app.config";
     {{ a + b }}
     <h1></h1>
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SumComponent {
 
@@ -23,4 +24,3 @@ export class SumComponent {
     this.logger.log(this.config.apiUrl);
   }
 }
-

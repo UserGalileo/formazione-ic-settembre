@@ -1,4 +1,4 @@
-import {Component, Input, output} from "@angular/core";
+import {Component, effect, signal} from "@angular/core";
 
 // Stateful
 @Component({
@@ -7,13 +7,13 @@ import {Component, Input, output} from "@angular/core";
   template: `
     <span
       [style]="{
-        background: count < 0 ? 'black' : 'inherit',
-        color: count < 0 ? 'red' : 'inherit',
+        background: count() < 0 ? 'black' : 'inherit',
+        color: count() < 0 ? 'red' : 'inherit',
         fontSize: '18px'
       }"
-      [class.danger]="count < 0"
+      [class.danger]="count() < 0"
     >
-      {{ count }}
+      {{ count() }}
     </span>
 
     <button (click)="inc()">+</button>
@@ -24,22 +24,32 @@ import {Component, Input, output} from "@angular/core";
       color: red;
       font-weight: bold;
     }
-  `
+  `,
 })
 export class CounterComponent {
 
-  @Input() count = 0;
+  // Stati
+  count = signal(0);
 
-  // Output
-  countChange = output<number>();
+  constructor() {
+    effect((onCleanup) => {
+      const count = this.count();
+
+      const timer = setTimeout(() => {
+        console.log(`5 secondi fa, count è diventato ${count}`);
+      }, 5000);
+
+      onCleanup(() => {
+        clearTimeout(timer);
+      })
+    })
+  }
 
   inc() {
-    this.count++;
-    this.countChange.emit(this.count);
+    this.count.update(n => n + 1);
   }
 
   dec() {
-    this.count--;
-    this.countChange.emit(this.count);
+    this.count.update(n => n - 1);
   }
 }
