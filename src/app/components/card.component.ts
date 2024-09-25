@@ -1,4 +1,5 @@
-import {afterNextRender, afterRender, Component} from "@angular/core";
+import {afterNextRender, afterRender, Component, contentChild, ElementRef} from "@angular/core";
+import {CounterComponent} from "./counter.component";
 
 @Component({
   selector: "app-card",
@@ -22,21 +23,15 @@ import {afterNextRender, afterRender, Component} from "@angular/core";
 })
 export class CardComponent {
 
+  foo = contentChild(CounterComponent);
+
   constructor() {
     afterNextRender(() => {
       console.log('Pagina TUTTA renderizzata');
     });
   }
 
-  ngOnInit() {
-    console.log('Card creata');
-  }
-
-  ngAfterViewInit() {
-    console.log('Card renderizzata')
-  }
-
-  ngOnDestroy() {
-    console.log('Card distrutta');
+  ngAfterContentInit() {
+    console.log(this.foo());
   }
 }

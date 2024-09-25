@@ -1,4 +1,4 @@
-import {Component, effect, signal} from "@angular/core";
+import {Component, computed, effect, input, Input, signal} from "@angular/core";
 
 // Stateful
 @Component({
@@ -13,7 +13,7 @@ import {Component, effect, signal} from "@angular/core";
       }"
       [class.danger]="count() < 0"
     >
-      {{ count() }}
+      {{ multipliedCount() }}
     </span>
 
     <button (click)="inc()">+</button>
@@ -28,14 +28,18 @@ import {Component, effect, signal} from "@angular/core";
 })
 export class CounterComponent {
 
+  multiplier = input(1);
+
   // Stati
   count = signal(0);
+  multipliedCount = computed(() => this.count() * this.multiplier());
 
   constructor() {
     effect((onCleanup) => {
       const count = this.count();
 
       const timer = setTimeout(() => {
+
         console.log(`5 secondi fa, count è diventato ${count}`);
       }, 5000);
 

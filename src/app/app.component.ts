@@ -1,33 +1,85 @@
 import {Component, inject} from '@angular/core';
-import {Router, RouterLink, RouterLinkActive, RouterOutlet} from "@angular/router";
-import {FormComponent} from "./components/form.component";
-import {DumbComponent} from "./components/dumb.component";
-import {CounterComponent} from "./components/counter.component";
+import {FormControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import {JsonPipe, NgForOf} from "@angular/common";
+import {ForbiddenValidatorDirective} from "./validators/forbidden.validator";
+import {forbiddenCredentials} from "./validators/forbidden-credentials.validator";
 
 @Component({
   selector: 'app-root',
   standalone: true,
   template: `
-    <button routerLink="/admin">Admin dashboard</button>
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+      <input formControlName="firstName">
+      <input formControlName="lastName">
 
-    <router-outlet />
+      <div formGroupName="address">
+        <h5>Address</h5>
+        <input formControlName="city">
+        <input formControlName="street">
+      </div>
 
-    <app-counter />
+      <div formArrayName="phones">
+        <h5>Phones</h5>
+        <button type="button" (click)="addPhone()">+ Add phone</button>
+        @for (phone of profileForm.controls['phones'].controls; let i = $index; track phone) {
+          <div>
+            <input type="text" [formControlName]="i">
+            <button type="button" (click)="removePhone(i)">- Remove phone</button>
+          </div>
+        }
+      </div>
+    </form>
+    <hr>
+    {{ profileForm.getRawValue() | json }}
+
+    <hr>
+    <input type="radio" [formControl]="food" value="beef"> Beef
+    <input type="radio" [formControl]="food" value="lamb"> Lamb
+    <input type="radio" [formControl]="food" value="fish"> Fish
+
+    <br>
+    {{ food.value }}
   `,
   imports: [
-    RouterOutlet,
-    RouterLink,
-    RouterLinkActive,
-    FormComponent,
-    DumbComponent,
-    CounterComponent
+    ReactiveFormsModule,
+    JsonPipe,
+    ForbiddenValidatorDirective,
+    NgForOf,
   ],
-  styles: `
-    .active {
-      font-weight: bold;
-    }
-  `
 })
 export class AppComponent {
-  router = inject(Router);
+
+  private fb = inject(NonNullableFormBuilder);
+
+  food = this.fb.control<'beef' | 'lamb' | 'fish'>('beef');
+
+  profileForm = this.fb.group({
+    firstName: ['', Validators.required],
+    lastName: [''],
+    address: this.fb.group({
+      city: '',
+      street: '',
+    }),
+    phones: this.fb.array<FormControl<string>>([])
+  }, {
+    validators: forbiddenCredentials('Michele', 'Stieven')
+  });
+
+  onSubmit() {
+    console.log(this.profileForm.getRawValue());
+    console.log(this.profileForm.valid);
+  }
+
+  addPhone() {
+    const phones = this.profileForm.controls['phones'];
+    phones.push(this.fb.control(''));
+  }
+
+  removePhone(i: number) {
+    console.log(i);
+    this.profileForm.controls['phones'].removeAt(i);
+  }
 }
+
+
+

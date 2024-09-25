@@ -1,4 +1,4 @@
-import {Component, Input, output} from "@angular/core";
+import {Component, input, Input, model, output} from "@angular/core";
 
 // Host Binding
 // Host Listener
@@ -64,15 +64,12 @@ import {Component, Input, output} from "@angular/core";
 })
 export class SliderComponent {
 
-  @Input({ alias: 'value' }) sliderValue = 50;
-  @Input() disabled = false;
-
-  valueChange = output<number>();
+  sliderValue = model(50, { alias: 'value' });
+  disabled = input(false);
 
   onInputChange(event: Event) {
     const target = event.target as HTMLInputElement;
-    this.sliderValue = +target.value;
-    this.valueChange.emit(this.sliderValue);
+    this.sliderValue.set(+target.value);
   }
 
   onMouseEnter(event: Event) {
