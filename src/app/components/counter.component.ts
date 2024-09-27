@@ -1,6 +1,15 @@
-import {Component, computed, effect, input, Input, signal} from "@angular/core";
+import {Component, effect, inject, Injector, model, signal} from "@angular/core";
+import {
+  AbstractControl,
+  ControlValueAccessor,
+  FormControl, NG_VALIDATORS,
+  NG_VALUE_ACCESSOR, NgControl,
+  ReactiveFormsModule, ValidationErrors,
+  Validator,
+  Validators
+} from "@angular/forms";
+import {JsonPipe} from "@angular/common";
 
-// Stateful
 @Component({
   selector: "app-counter",
   standalone: true,
@@ -13,11 +22,11 @@ import {Component, computed, effect, input, Input, signal} from "@angular/core";
       }"
       [class.danger]="count() < 0"
     >
-      {{ multipliedCount() }}
+      {{ count() }}
     </span>
 
-    <button (click)="inc()">+</button>
-    <button (click)="dec()">-</button>
+    <button type="button" (click)="inc()">+</button>
+    <button type="button" (click)="dec()">-</button>
   `,
   styles: `
     .danger {
@@ -25,35 +34,81 @@ import {Component, computed, effect, input, Input, signal} from "@angular/core";
       font-weight: bold;
     }
   `,
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: CounterComponent,
+      multi: true
+    },
+    {
+      provide: NG_VALIDATORS,
+      useExisting: CounterComponent,
+      multi: true
+    }
+  ],
+  imports: [
+    JsonPipe
+  ],
+  host: {
+    '[style.opacity]': `isDisabled() ? 0.5 : 1`,
+  }
 })
-export class CounterComponent {
+export class CounterComponent implements ControlValueAccessor, Validator {
 
-  multiplier = input(1);
+  injector = inject(Injector);
+  ngControl: NgControl | null = null;
 
   // Stati
-  count = signal(0);
-  multipliedCount = computed(() => this.count() * this.multiplier());
+  count = model(0);
+  isDisabled = model(false);
 
-  constructor() {
-    effect((onCleanup) => {
-      const count = this.count();
+  onChange = (value: number) => {}
+  onTouched = () => {}
 
-      const timer = setTimeout(() => {
+  countChangeEffect = effect(() => {
+    this.onChange(this.count());
+  });
 
-        console.log(`5 secondi fa, count è diventato ${count}`);
-      }, 5000);
-
-      onCleanup(() => {
-        clearTimeout(timer);
-      })
-    })
+  ngOnInit() {
+    this.ngControl = this.injector.get(NgControl);
   }
 
   inc() {
-    this.count.update(n => n + 1);
+    if (!this.isDisabled()) {
+      this.count.update(n => n + 1);
+      this.onTouched();
+    }
   }
 
   dec() {
-    this.count.update(n => n - 1);
+    if (!this.isDisabled()) {
+      this.count.update(n => n - 1);
+      this.onTouched();
+    }
+  }
+
+  // Chiamato ogni volta che il FormControl cambia valore
+  writeValue(value: number) {
+    this.count.set(value);
+  }
+
+  // Chiamata una volta sola all'inizio
+  registerOnChange(fn: any) {
+    this.onChange = fn;
+  }
+
+  registerOnTouched(fn: any) {
+    this.onTouched = fn;
+  }
+
+  setDisabledState(isDisabled: boolean) {
+    this.isDisabled.set(isDisabled);
+  }
+
+  validate(control: AbstractControl) {
+    if (control.value < 3) {
+       return { notEnough: true }
+    }
+    return null;
   }
 }

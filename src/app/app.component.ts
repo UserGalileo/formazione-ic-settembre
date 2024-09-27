@@ -1,22 +1,20 @@
 import {Component, inject} from '@angular/core';
-import {FormControl, NonNullableFormBuilder, ReactiveFormsModule, Validators } from "@angular/forms";
+import {FormControl, FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators} from "@angular/forms";
 import {JsonPipe, NgForOf} from "@angular/common";
 import {ForbiddenValidatorDirective} from "./validators/forbidden.validator";
 import {forbiddenCredentials} from "./validators/forbidden-credentials.validator";
+import {CounterComponent} from "./components/counter.component";
+import {AddressFormComponent} from "./components/address-form.component";
 
 @Component({
   selector: 'app-root',
   standalone: true,
   template: `
     <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-      <input formControlName="firstName">
-      <input formControlName="lastName">
+      <input formControlName="firstName" placeholder="First name">
+      <input formControlName="lastName" placeholder="Last name">
 
-      <div formGroupName="address">
-        <h5>Address</h5>
-        <input formControlName="city">
-        <input formControlName="street">
-      </div>
+      <app-address-form formControlName="address" />
 
       <div formArrayName="phones">
         <h5>Phones</h5>
@@ -28,9 +26,13 @@ import {forbiddenCredentials} from "./validators/forbidden-credentials.validator
           </div>
         }
       </div>
+
+      <app-counter formControlName="counter" />
     </form>
+
     <hr>
-    {{ profileForm.getRawValue() | json }}
+
+    {{ profileForm.value | json }}
 
     <hr>
     <input type="radio" [formControl]="food" value="beef"> Beef
@@ -41,10 +43,13 @@ import {forbiddenCredentials} from "./validators/forbidden-credentials.validator
     {{ food.value }}
   `,
   imports: [
+    FormsModule,
     ReactiveFormsModule,
     JsonPipe,
     ForbiddenValidatorDirective,
     NgForOf,
+    CounterComponent,
+    AddressFormComponent,
   ],
 })
 export class AppComponent {
@@ -56,11 +61,12 @@ export class AppComponent {
   profileForm = this.fb.group({
     firstName: ['', Validators.required],
     lastName: [''],
-    address: this.fb.group({
+    address: {
       city: '',
       street: '',
-    }),
-    phones: this.fb.array<FormControl<string>>([])
+    },
+    phones: this.fb.array<FormControl<string>>([]),
+    counter: 0
   }, {
     validators: forbiddenCredentials('Michele', 'Stieven')
   });
