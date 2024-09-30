@@ -43,9 +43,7 @@ export class AddressFormComponent implements ControlValueAccessor {
   }
 
   registerOnChange(fn: any) {
-    this.sub = this.addressForm.valueChanges.subscribe(value => {
-      fn(value);
-    });
+    this.sub = this.addressForm.valueChanges.subscribe(value => fn(value));
   }
 
   registerOnTouched(fn: any) {}

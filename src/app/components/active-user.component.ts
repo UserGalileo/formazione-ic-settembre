@@ -1,25 +1,29 @@
-import {Component} from "@angular/core";
-
-interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  nickname: string;
-}
+import {Component, inject, signal} from "@angular/core";
+import {User} from "../models/user";
+import {HttpClient} from "@angular/common/http";
+import {AsyncPipe, JsonPipe} from "@angular/common";
+import {toObservable} from "@angular/core/rxjs-interop";
+import {shareReplay, switchMap} from "rxjs";
 
 // Stati derivati
 @Component({
   selector: "app-active-user",
   standalone: true,
   template: `
-
-    @for (user of users; track user.id) {
+    @for (user of users(); track user.id) {
       <li
-        (click)="activeId = user.id"
-        [class.active]="activeUser === user"
-      >{{ user.firstName }} {{ user.lastName }}</li>
+        (click)="onUserClick(user.id)"
+        [class.active]="activeId() === user.id"
+      >{{ user.name }}
+      </li>
     }
+    <hr>
+    {{ activeUser$ | async | json }}
   `,
+  imports: [
+    JsonPipe,
+    AsyncPipe
+  ],
   styles: `
     .active {
       font-weight: bold;
@@ -29,31 +33,32 @@ interface User {
 })
 export class ActiveUserComponent {
 
-  // Stato
-  users: User[] = [
-    {
-      id: 1,
-      nickname: 'micheles',
-      firstName: 'Michele',
-      lastName: 'Stieven',
-    },
-    {
-      id: 2,
-      nickname: 'marior',
-      firstName: 'Mario',
-      lastName: 'Rossi',
-    },
-    {
-      id: 3,
-      nickname: 'tiziob',
-      firstName: 'Tizio',
-      lastName: 'Biondi',
+  private http = inject(HttpClient);
+
+  users = signal<Pick<User, 'id' | 'name'>[]>([]);
+  activeId = signal<User['id'] | null>(null);
+
+  activeUser$ = toObservable(this.activeId).pipe(
+    switchMap(id => {
+      if (!id) return [null];
+      return this.http.get<User>('https://jsonplaceholder.typicode.com/users/' + id);
+    }),
+    shareReplay(1)
+  );
+
+  ngOnInit() {
+    this.http.get<User[]>('https://jsonplaceholder.typicode.com/users').subscribe(users => {
+      const [u1, u2, u3] = users;
+      this.users.set([u1, u2, u3].map(u => ({ id: u.id, name: u.name })));
+    })
+  }
+
+  onUserClick(id: User['id']): void {
+    if (id === this.activeId()) {
+      this.activeId.set(null);
+    } else {
+      this.activeId.set(id);
     }
-  ];
-
-  activeId: User['id'] | null = null;
-
-  get activeUser() {
-    return this.users.find(user => user.id === this.activeId);
   }
 }
+
