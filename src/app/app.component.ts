@@ -1,19 +1,21 @@
 import {Component} from '@angular/core';
-import {ActiveUserComponent} from "./components/active-user.component";
 import {RouterOutlet} from "@angular/router";
+import {AddressFormComponent} from "./components/address-form.component";
 
+// Deferrable Views
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
-    ActiveUserComponent,
-    RouterOutlet
+    RouterOutlet,
+    AddressFormComponent
   ],
   template: `
-    <router-outlet />
+    @defer (on interaction; prefetch on hover) {
+      <app-address-form />
+    } @placeholder () {
+      <p>Placeholder...</p>
+    }
   `
 })
-export class AppComponent {
-
-
-}
+export class AppComponent {}
